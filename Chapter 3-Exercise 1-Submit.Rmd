@@ -1,0 +1,91 @@
+---
+title: "Chapter 3 Exercise 1"
+author: "Dee Muralidharan"
+date: "July 3, 2017"
+output: html_document
+
+
+question 0: Load the data in RStudio
+Save the data set as a CSV file called refine_original.csv and load it in RStudio into a data frame.
+---
+```{r}
+library(dplyr)
+library(tidyr)
+refine_original<-read.csv("refine_original.csv", header=TRUE, as.is = TRUE)
+refine_original
+colnames(refine_original)
+```
+
+```
+The output is printed to check if the values are similar to the original - One issue I noticed is that the Company column name is distorted and is having the name as **i..Company**, I have worked the code thus, using **i...company** as the column name but I am unable the figure out the reason for this distortion. The col name (company) is accurate (i.e. as company) in the CSV file. Besides this the coding is intent on achieving the goals of the exercise.    
+
+
+1: Clean up brand names
+Clean up the 'company' column so all of the misspellings of the brand names are standardized. For example, you can transform the values in the column to be: philips, akzo, van houten and unilever (all lowercase).
+
+```{r cars}
+##Chapter 3 Exercise 1 question #1
+vec_philips<- c("phillipS","phillps", "phllips","philips","phillips",
+                "Phillips","phillips","fillips","phlips")
+vec_akzo<- c("akzo",	"Akzo",	"AKZO","akz0","ak zo","akzo","akzo")
+vec_van_houten<- c("Van Houten","van Houten","van houten","van houten","Van Houten")
+vec_unilever<- c("unilever",	"Unilever",	"unilever",	"unilver")
+
+refine_original$ï..company[refine_original$ï..company %in% vec_philips] <- "philips"
+refine_original$ï..company[refine_original$ï..company %in% vec_akzo]<- "akzo"
+refine_original$ï..company[refine_original$ï..company%in%vec_van_houten]<-"van houten"
+refine_original$ï..company[refine_original$ï..company%in%vec_unilever]<-"unilever"
+print_output<- select(refine_original,ends_with("ny"))
+print_output
+```
+
+2: Separate product code and number
+Separate the product code and product number into separate columns i.e. add two new columns called product_code and product_number, containing the product code and number respectively
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+refine_original<-separate(refine_original,Product.code...number, c("Product_code","Product_number"), 
+                          sep="-", remove = TRUE)
+refine_original
+```
+3: Add product categories
+You learn that the product codes actually represent the following product categories:
+p = Smartphone
+v = TV
+x = Laptop
+q = Tablet
+In order to make the data more readable, add a column with the product category for each record.
+```{r}
+##Chapter 3 Exercise 1 question #3
+refine_original <- refine_original %>% mutate(Product_category 
+                                              = ifelse(grepl("p", Product_code), 
+                                                                        "smartphone", ifelse(grepl("v", Product_code), "TV", 
+                                                                                             ifelse(grepl("x", Product_code),"Laptop", 
+                                                                                                    ifelse(grepl("q", Product_code),"Tablet", " ")))))
+```
+4: Add full address for geocoding
+You'd like to view the customer information on a map. In order to do that, the addresses need to be in a form that can be easily geocoded. Create a new column full_address that concatenates the three address fields (address, city, country), separated by commas.
+```{r}
+##Chapter 3 Exercise 1 question #4
+refine_original<- unite(refine_original,full_address, c(address,city, country), sep = "," )
+```
+5: Create dummy variables for company and product category
+Both the company name and product category are categorical variables i.e. they take only a fixed set of values. In order to use them in further analysis you need to create dummy variables. Create dummy binary variables for each of them with the prefix company_ and product_ i.e.,
+- Add four binary (1 or 0) columns for company: company_philips, company_akzo, company_van_houten and company_unilever.
+```{r}
+refine_original<-refine_original %>% mutate(company_philips=
+                 ifelse(grepl("philips",ï..company),1,0))%>% mutate (company_akzo=
+                 ifelse(grepl("akzo",ï..company),1,0))%>% mutate (company_van_houten =
+                 ifelse(grepl("van houten",ï..company),1,0))%>% mutate (company_unilever=
+                 ifelse(grepl("unilever",ï..company),1,0))
+```
+-Add four binary (1 or 0) columns for product category: product_smartphone, product_tv, product_laptop and product_tablet
+```{r}
+##Chapter 3 Exercise 1 question #5 PART B  product_smartphone, product_tv, product_laptop and product_tablet.
+refine_original<-refine_original %>% mutate(product_smartphone=ifelse(grepl("p",Product_code),1,0))
+refine_original<-refine_original%>% mutate (product_tv=ifelse(grepl("v",Product_code),1,0))
+refine_original<-refine_original%>% mutate (product_laptop =ifelse(grepl("x",Product_code),1,0))
+refine_original<-refine_original%>% mutate (product_tablet= ifelse(grepl("q",Product_code),1,0))
+refine_clean <-refine_original
+write.csv(refine_clean,file="refine_clean.csv")
+```
+
